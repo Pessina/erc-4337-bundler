@@ -1,5 +1,5 @@
 import { IsString, IsOptional, Matches, IsIn } from '@nestjs/class-validator';
-import { IsJsonValid, IsNullStringNumber } from './decorators';
+import { IsJsonValid, IsNullStringNumber } from '../custom-class-validators';
 
 export class JsonRpcRequest {
   @IsString()
@@ -31,10 +31,4 @@ export class JsonRpcRequest {
   id?: number | string | null;
 }
 
-export enum JsonRpcErrorCode {
-  PARSE_ERROR = -32700,
-  INVALID_REQUEST = -32600,
-  METHOD_NOT_FOUND = -32601,
-  INVALID_PARAMS = -32602,
-  INTERNAL_ERROR = -32603,
-}
+// TODO: Add response dto

@@ -5,55 +5,37 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { JsonRpcErrorCode, JsonRpcErrorResponse } from '../types';
 
 @Catch()
 export class JsonRpcExceptionFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-
-    let errorResponse: {
-      jsonrpc: string;
-      error: {
-        code: number;
-        message: string;
-        data: any;
-      };
-      id: number | string | null;
-    };
+    let errorResponse: JsonRpcErrorResponse;
 
     if (exception instanceof BadRequestException) {
       errorResponse = {
         jsonrpc: '2.0',
         error: {
-          code: -32600,
+          code: JsonRpcErrorCode.INVALID_REQUEST,
           message: 'Invalid Request',
           data: exception.getResponse(),
         },
         id: null,
       };
-    } else if (exception instanceof SyntaxError) {
-      errorResponse = {
-        jsonrpc: '2.0',
-        error: {
-          code: -32700,
-          message: 'Parse error',
-          data: exception.message,
-        },
-        id: null,
-      };
+      response.status(400).json(errorResponse);
     } else {
       errorResponse = {
         jsonrpc: '2.0',
         error: {
-          code: -32603,
+          code: JsonRpcErrorCode.INTERNAL_ERROR,
           message: 'Internal error',
           data: exception.message,
         },
         id: null,
       };
+      response.status(500).json(errorResponse);
     }
-
-    response.status(200).json(errorResponse);
   }
 }
