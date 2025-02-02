@@ -21,6 +21,7 @@ export class UserOperationService {
   private readonly walletClient: WalletClient;
 
   constructor(private readonly configService: ConfigService<EnvConfig, true>) {
+    // TODO: Include account rotation
     this.walletClient = createWalletClient({
       account: privateKeyToAccount(
         this.configService.get('ETH_PRIVATE_KEY', { infer: true }),
