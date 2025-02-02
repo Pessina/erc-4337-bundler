@@ -3,7 +3,7 @@ import { JsonRpcService } from './json-rpc.service';
 import { JsonRpcRequest } from './dto/json-rpc.dto';
 import { JsonRpcExceptionFilter } from './filters/json-rpc-exception.filter';
 import { JsonRpcError } from './errors/json-rpc.error';
-import { JsonRpcErrorCode } from './types';
+import { JsonRpcErrorCode, JsonRpcResponse } from './types';
 
 @Controller('rpc')
 @UseFilters(JsonRpcExceptionFilter)
@@ -13,17 +13,10 @@ export class JsonRpcController {
   @Post()
   handleRpcCall(
     @Body()
-    request: JsonRpcRequest,
-  ): string {
+    request: JsonRpcRequest | JsonRpcRequest[],
+  ): Promise<JsonRpcResponse | JsonRpcResponse[]> {
     try {
-      if (request.method === 'eth_sendUserOperation') {
-        return this.jsonRpcService.handleSendUserOperation();
-      }
-
-      throw new JsonRpcError(
-        JsonRpcErrorCode.METHOD_NOT_FOUND,
-        'Method not found',
-      );
+      return this.jsonRpcService.processJsonRpcRequest(request);
     } catch (error: unknown) {
       if (error instanceof JsonRpcError) {
         throw error;
