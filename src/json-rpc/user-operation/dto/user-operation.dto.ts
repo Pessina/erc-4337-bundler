@@ -1,48 +1,57 @@
-import { IsHexadecimal, IsNotEmpty } from '@nestjs/class-validator';
+import { IsNotEmpty } from '@nestjs/class-validator';
+import { IsHexadecimalString } from 'src/json-rpc/custom-class-validators/is-hexadecimal-string.validator';
+import { IsSendUserOpParams } from 'src/json-rpc/custom-class-validators/is-send-user-op-params.validator';
 import { Hex } from 'viem';
 
+// @IsHexadecimal() from class-validator is not working, I believe it's because of the starting 0x on the input
 export class UserOperationDto {
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   sender: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   nonce: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   initCode: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   callData: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   callGasLimit: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   verificationGasLimit: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   preVerificationGas: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   maxFeePerGas: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   maxPriorityFeePerGas: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   paymasterAndData: Hex;
 
-  @IsHexadecimal()
   @IsNotEmpty()
+  @IsHexadecimalString()
   signature: Hex;
+}
+
+export class SendUserOperationParamsDto {
+  @IsNotEmpty()
+  @IsSendUserOpParams()
+  params: [UserOperationDto, Hex];
 }

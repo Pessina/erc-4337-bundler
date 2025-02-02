@@ -1,18 +1,26 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { type Env } from '../../config/env.schema';
+import { EnvConfig } from '../../config/env.schema';
 import { UserOperationDto } from './dto/user-operation.dto';
 import { JsonRpcError } from '../errors/json-rpc.error';
 import { JsonRpcErrorCode } from '../types';
-import { createWalletClient, Hex, http, WalletClient } from 'viem';
+import {
+  createWalletClient,
+  Hex,
+  http,
+  WalletClient,
+  WriteContractErrorType,
+} from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
+import { entryPointAbi } from './abis/entry-point.abi';
+
 @Injectable()
 export class UserOperationService {
   private readonly logger = new Logger(UserOperationService.name);
   private readonly walletClient: WalletClient;
 
-  constructor(private readonly configService: ConfigService<Env, true>) {
+  constructor(private readonly configService: ConfigService<EnvConfig, true>) {
     this.walletClient = createWalletClient({
       account: privateKeyToAccount(
         this.configService.get('ETH_PRIVATE_KEY', { infer: true }),
@@ -22,10 +30,10 @@ export class UserOperationService {
     });
   }
 
-  async sendUserOperation(
-    userOp: UserOperationDto,
-    entryPoint: Hex,
-  ): Promise<string> {
+  async sendUserOperation([userOp, entryPoint]: [
+    UserOperationDto,
+    Hex,
+  ]): Promise<string> {
     try {
       const account = this.walletClient.account;
 
@@ -51,42 +59,27 @@ export class UserOperationService {
         address: entryPoint,
         chain: sepolia,
         account,
-        abi: [
-          {
-            name: 'handleOps',
-            type: 'function',
-            stateMutability: 'payable',
-            inputs: [
-              {
-                components: [
-                  { name: 'sender', type: 'address' },
-                  { name: 'nonce', type: 'uint256' },
-                  { name: 'initCode', type: 'bytes' },
-                  { name: 'callData', type: 'bytes' },
-                  { name: 'callGasLimit', type: 'uint256' },
-                  { name: 'verificationGasLimit', type: 'uint256' },
-                  { name: 'preVerificationGas', type: 'uint256' },
-                  { name: 'maxFeePerGas', type: 'uint256' },
-                  { name: 'maxPriorityFeePerGas', type: 'uint256' },
-                  { name: 'paymasterAndData', type: 'bytes' },
-                  { name: 'signature', type: 'bytes' },
-                ],
-                name: 'ops',
-                type: 'tuple[]',
-              },
-              { name: 'beneficiary', type: 'address' },
-            ],
-            outputs: [],
-          },
-        ],
+        abi: entryPointAbi,
         functionName: 'handleOps',
         args: [[formattedUserOp], userOp.sender],
       });
 
       return hash;
-    } catch (error) {
-      this.logger.error('Error processing UserOperation:', error);
-      throw error;
+    } catch (e) {
+      const error = e as WriteContractErrorType;
+      // This list is not exhaustive and should be improved
+      if (error.name === 'ContractFunctionExecutionError') {
+        this.logger.error('Contract execution failed:', error.cause.message);
+        throw new JsonRpcError(
+          JsonRpcErrorCode.INVALID_REQUEST,
+          error.cause.message || 'Contract execution failed',
+        );
+      }
+      this.logger.error('Unknown error:', error.message);
+      throw new JsonRpcError(
+        JsonRpcErrorCode.INTERNAL_ERROR,
+        error.message || 'Unknown error occurred',
+      );
     }
   }
 }

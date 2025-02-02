@@ -11,12 +11,12 @@ export class JsonRpcController {
   constructor(private readonly jsonRpcService: JsonRpcService) {}
 
   @Post()
-  handleRpcCall(
+  async handleRpcCall(
     @Body()
     request: JsonRpcRequest | JsonRpcRequest[],
   ): Promise<JsonRpcResponse | JsonRpcResponse[]> {
     try {
-      return this.jsonRpcService.processJsonRpcRequest(request);
+      return this.jsonRpcService.handleJsonRpcRequest(request);
     } catch (error: unknown) {
       if (error instanceof JsonRpcError) {
         throw error;

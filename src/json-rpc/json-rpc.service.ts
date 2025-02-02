@@ -3,14 +3,15 @@ import { JsonRpcRequest } from './dto/json-rpc.dto';
 import { JsonRpcErrorCode, JsonRpcResponse } from './types';
 import { JsonRpcError } from './errors/json-rpc.error';
 import { UserOperationService } from './user-operation/user-operation.service';
-import { UserOperationDto } from './user-operation/dto/user-operation.dto';
-import { Hex } from 'viem';
+import { SendUserOperationParamsDto } from './user-operation/dto/user-operation.dto';
+import { validateOrReject } from '@nestjs/class-validator';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class JsonRpcService {
   constructor(private readonly userOperationService: UserOperationService) {}
 
-  processJsonRpcRequest(
+  handleJsonRpcRequest(
     request: JsonRpcRequest | JsonRpcRequest[],
   ): Promise<JsonRpcResponse | JsonRpcResponse[]> {
     if (Array.isArray(request)) {
@@ -26,19 +27,31 @@ export class JsonRpcService {
     switch (request.method) {
       // TODO: Consider using enum for methods and maybe validate on the DTO of the JsonRpcRequest
       case 'eth_sendUserOperation': {
-        // TODO: Use DTO for validation
-        const [userOp, entryPoint] = request.params as [UserOperationDto, Hex];
+        try {
+          const sendUserOpObject = plainToInstance(
+            SendUserOperationParamsDto,
+            request,
+          );
 
-        const result = await this.userOperationService.sendUserOperation(
-          userOp,
-          entryPoint,
-        );
+          await validateOrReject(sendUserOpObject);
 
-        return {
-          jsonrpc: '2.0',
-          id: request.id ?? null,
-          result,
-        };
+          const result = await this.userOperationService.sendUserOperation(
+            sendUserOpObject.params,
+          );
+
+          return {
+            jsonrpc: '2.0',
+            id: request.id ?? null,
+            result,
+          };
+        } catch (error) {
+          // TODO: Consider high-level validation of the params
+          throw new JsonRpcError(
+            JsonRpcErrorCode.INVALID_PARAMS,
+            'Invalid UserOperation params',
+            error instanceof Error ? error.message : 'Validation failed',
+          );
+        }
       }
       default:
         throw new JsonRpcError(
