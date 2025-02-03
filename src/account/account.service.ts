@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from 'src/config/env.schema';
 import { getChain } from 'src/utils';
@@ -18,7 +18,6 @@ import { JsonRpcErrorCode } from 'src/json-rpc/types';
 @Injectable()
 export class AccountService implements OnModuleInit {
   private readonly accounts: PrivateKeyAccount[] = [];
-  private readonly logger = new Logger(AccountService.name);
   private readonly publicClient: PublicClient;
 
   constructor(private readonly configService: ConfigService<EnvConfig, true>) {
@@ -53,14 +52,12 @@ export class AccountService implements OnModuleInit {
   }
 
   // The current implementation relies on the node mempool, that can be out of sync.
-  // Consider other account selection mechanisms such as time-based, balance-based, etc.
+  // Consider other account selection/scoring mechanisms such as time-based, balance-based, etc.
   private async selectOptimalAccount(): Promise<PrivateKeyAccount> {
     try {
       const accountStates = await this.getAccountStates();
-      console.log(accountStates);
       return accountStates.sort((a, b) => b.score - a.score)[0].account;
-    } catch (error) {
-      this.logger.error('Failed to select optimal account:', error);
+    } catch {
       throw new JsonRpcError(
         JsonRpcErrorCode.INTERNAL_ERROR,
         'Failed to select optimal account',
