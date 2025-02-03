@@ -16,17 +16,17 @@ export class UserOperationService {
     UserOperationDto,
     Hex,
   ]): Promise<string> {
-    const walletClient = this.accountService.getWalletClient();
+    const walletClient = await this.accountService.getWalletClient();
 
     try {
-      // TODO: Use proper error message
       if (!walletClient || !walletClient.account) {
         throw new JsonRpcError(
           JsonRpcErrorCode.INTERNAL_ERROR,
-          'Internal account not initialized',
+          'Unable to get wallet client',
         );
       }
 
+      // TODO: Include exponential back off retry
       return walletClient.writeContract({
         chain: walletClient.chain,
         account: walletClient.account,
@@ -37,14 +37,15 @@ export class UserOperationService {
       });
     } catch (e) {
       const error = e as WriteContractErrorType;
-      // This list is not exhaustive and should be extended
+      // The list is not exhaustive and should be extended
       if (error.name === 'ContractFunctionExecutionError') {
-        this.logger.error('Contract execution failed:', error.cause.message);
+        this.logger.error('Contract execution failed:', error.message);
         throw new JsonRpcError(
           JsonRpcErrorCode.INVALID_REQUEST,
           error.cause.message || 'Contract execution failed',
         );
       }
+
       this.logger.error('Unknown error:', error.message);
       throw new JsonRpcError(
         JsonRpcErrorCode.INTERNAL_ERROR,
