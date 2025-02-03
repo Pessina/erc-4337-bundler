@@ -4,9 +4,8 @@ import { JsonRpcErrorCode, JsonRpcResponse } from './types';
 import { JsonRpcError } from './errors/json-rpc.error';
 import { UserOperationService } from './user-operation/user-operation.service';
 import { SendUserOperationParamsDto } from './user-operation/dto/user-operation.dto';
-import { validateOrReject } from '@nestjs/class-validator';
-import { plainToInstance } from 'class-transformer';
 import { JSON_RPC_VERSION } from 'src/constants';
+import { assertSchema } from 'src/utils';
 
 @Injectable()
 export class JsonRpcService {
@@ -28,31 +27,20 @@ export class JsonRpcService {
     switch (request.method) {
       // TODO: Consider using enum for methods and maybe validate on the DTO of the JsonRpcRequest
       case 'eth_sendUserOperation': {
-        try {
-          const sendUserOpObject = plainToInstance(
-            SendUserOperationParamsDto,
-            request,
-          );
+        const sendUserOpObject = await assertSchema(
+          SendUserOperationParamsDto,
+          request,
+        );
 
-          await validateOrReject(sendUserOpObject);
+        const result = await this.userOperationService.sendUserOperation(
+          sendUserOpObject.params,
+        );
 
-          const result = await this.userOperationService.sendUserOperation(
-            sendUserOpObject.params,
-          );
-
-          return {
-            jsonrpc: JSON_RPC_VERSION,
-            id: request.id ?? null,
-            result,
-          };
-        } catch (error) {
-          // TODO: Consider high-level validation of the params
-          throw new JsonRpcError(
-            JsonRpcErrorCode.INVALID_PARAMS,
-            'Invalid UserOperation params',
-            error instanceof Error ? error.message : 'Validation failed',
-          );
-        }
+        return {
+          jsonrpc: JSON_RPC_VERSION,
+          id: request.id ?? null,
+          result,
+        };
       }
       default:
         throw new JsonRpcError(

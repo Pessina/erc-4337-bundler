@@ -5,6 +5,7 @@ import { UserOperationDto } from './dto/user-operation.dto';
 import { JsonRpcError } from '../errors/json-rpc.error';
 import { JsonRpcErrorCode } from '../types';
 import {
+  Chain,
   createWalletClient,
   Hex,
   http,
@@ -12,21 +13,24 @@ import {
   WriteContractErrorType,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { sepolia } from 'viem/chains';
 import { entryPointAbi } from './abis/entry-point.abi';
+import { getChain } from 'src/utils';
 
 @Injectable()
 export class UserOperationService {
   private readonly logger = new Logger(UserOperationService.name);
   private readonly walletClient: WalletClient;
+  private readonly chain: Chain;
 
   constructor(private readonly configService: ConfigService<EnvConfig, true>) {
+    this.chain = getChain(this.configService.get('CHAIN_ID', { infer: true }));
+
     // TODO: Include account rotation
     this.walletClient = createWalletClient({
       account: privateKeyToAccount(
         this.configService.get('ETH_PRIVATE_KEY', { infer: true }),
       ),
-      chain: sepolia,
+      chain: this.chain,
       transport: http(),
     });
   }
@@ -48,7 +52,7 @@ export class UserOperationService {
 
       const hash = await this.walletClient.writeContract({
         address: entryPoint,
-        chain: sepolia,
+        chain: this.chain,
         account,
         abi: entryPointAbi,
         functionName: 'handleOps',
