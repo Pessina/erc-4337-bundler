@@ -1,5 +1,5 @@
 import { IsString, IsOptional, Matches, IsIn } from '@nestjs/class-validator';
-import { IsJsonValid, IsNullStringNumber } from '../custom-class-validators';
+import { IsJsonValid, IsNullStringNumber } from '../../custom-class-validators';
 import { JSON_RPC_VERSION } from 'src/constants';
 
 export class JsonRpcRequest {

@@ -1,5 +1,5 @@
 import { registerDecorator, ValidationOptions } from '@nestjs/class-validator';
-import { UserOperationDto } from '../user-operation/dto/user-operation.dto';
+import { UserOperationDto } from '../json-rpc/user-operation/dto/user-operation.dto';
 import { Hex } from 'viem';
 import { addressRegex } from 'src/regex';
 import { assertSchema } from 'src/utils';

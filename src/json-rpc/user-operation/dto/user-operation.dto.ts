@@ -1,5 +1,5 @@
 import { IsNotEmpty, Matches } from '@nestjs/class-validator';
-import { IsSendUserOpParams } from 'src/json-rpc/custom-class-validators';
+import { IsSendUserOpParams } from '../../../custom-class-validators';
 import { hexStringRegex } from 'src/regex';
 import { Hex } from 'viem';
 
