@@ -42,19 +42,9 @@ export class UserOperationService {
       if (!account) {
         throw new JsonRpcError(
           JsonRpcErrorCode.INTERNAL_ERROR,
-          'Account not found',
+          'Internal account not initialized',
         );
       }
-
-      const formattedUserOp = {
-        ...userOp,
-        nonce: BigInt(userOp.nonce),
-        callGasLimit: BigInt(userOp.callGasLimit),
-        verificationGasLimit: BigInt(userOp.verificationGasLimit),
-        preVerificationGas: BigInt(userOp.preVerificationGas),
-        maxFeePerGas: BigInt(userOp.maxFeePerGas),
-        maxPriorityFeePerGas: BigInt(userOp.maxPriorityFeePerGas),
-      };
 
       const hash = await this.walletClient.writeContract({
         address: entryPoint,
@@ -62,13 +52,20 @@ export class UserOperationService {
         account,
         abi: entryPointAbi,
         functionName: 'handleOps',
-        args: [[formattedUserOp], userOp.sender],
+        args: [[userOp], account.address],
       });
+
+      if (!hash) {
+        throw new JsonRpcError(
+          JsonRpcErrorCode.INTERNAL_ERROR,
+          'Failed to send user operation',
+        );
+      }
 
       return hash;
     } catch (e) {
       const error = e as WriteContractErrorType;
-      // This list is not exhaustive and should be improved
+      // This list is not exhaustive and should be extended
       if (error.name === 'ContractFunctionExecutionError') {
         this.logger.error('Contract execution failed:', error.cause.message);
         throw new JsonRpcError(

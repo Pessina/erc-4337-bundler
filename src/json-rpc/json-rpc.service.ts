@@ -6,6 +6,7 @@ import { UserOperationService } from './user-operation/user-operation.service';
 import { SendUserOperationParamsDto } from './user-operation/dto/user-operation.dto';
 import { validateOrReject } from '@nestjs/class-validator';
 import { plainToInstance } from 'class-transformer';
+import { JSON_RPC_VERSION } from 'src/constants';
 
 @Injectable()
 export class JsonRpcService {
@@ -40,7 +41,7 @@ export class JsonRpcService {
           );
 
           return {
-            jsonrpc: '2.0',
+            jsonrpc: JSON_RPC_VERSION,
             id: request.id ?? null,
             result,
           };

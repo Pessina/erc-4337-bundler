@@ -3,6 +3,7 @@ import { JsonRpcController } from './json-rpc.controller';
 import { JsonRpcService } from './json-rpc.service';
 import { JsonRpcError } from './errors/json-rpc.error';
 import { JsonRpcErrorCode } from './types';
+import { JSON_RPC_VERSION } from 'src/constants';
 
 describe('JsonRpcController', () => {
   let controller: JsonRpcController;
@@ -22,13 +23,13 @@ describe('JsonRpcController', () => {
 
   describe('handleRpcCall', () => {
     it('should throw JsonRpcError when method not found', () => {
-      const request = {
-        jsonrpc: '2.0' as const,
-        method: 'nonexistent_method',
-        id: 1,
-      };
-
-      expect(() => controller.handleRpcCall(request)).toThrow(
+      expect(() =>
+        controller.handleRpcCall({
+          jsonrpc: JSON_RPC_VERSION,
+          method: 'nonexistent_method',
+          id: 1,
+        }),
+      ).toThrow(
         new JsonRpcError(JsonRpcErrorCode.METHOD_NOT_FOUND, 'Method not found'),
       );
     });

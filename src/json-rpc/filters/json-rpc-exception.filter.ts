@@ -9,6 +9,7 @@ import { Response } from 'express';
 import { JsonRpcErrorCode, JsonRpcErrorResponse } from '../types';
 import { JsonRpcError } from '../errors/json-rpc.error';
 import { JsonRpcRequest } from '../dto/json-rpc.dto';
+import { JSON_RPC_VERSION } from 'src/constants';
 
 @Catch()
 export class JsonRpcExceptionFilter implements ExceptionFilter {
@@ -24,7 +25,7 @@ export class JsonRpcExceptionFilter implements ExceptionFilter {
     const errorDetails = this.getErrorDetails(exception);
 
     const errorResponse: JsonRpcErrorResponse = {
-      jsonrpc: '2.0',
+      jsonrpc: JSON_RPC_VERSION,
       error: errorDetails.data,
       id: request.body.id ?? null,
     };

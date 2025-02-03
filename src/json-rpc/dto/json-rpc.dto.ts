@@ -1,15 +1,16 @@
 import { IsString, IsOptional, Matches, IsIn } from '@nestjs/class-validator';
 import { IsJsonValid, IsNullStringNumber } from '../custom-class-validators';
+import { JSON_RPC_VERSION } from 'src/constants';
 
 export class JsonRpcRequest {
   @IsString()
   @IsIn([
-    '2.0',
+    JSON_RPC_VERSION,
     {
       message: 'Invalid jsonrpc version, must be 2.0',
     },
   ])
-  jsonrpc: '2.0';
+  jsonrpc: typeof JSON_RPC_VERSION;
 
   @IsString()
   @Matches(/^(?!rpc\.).*$/, {
