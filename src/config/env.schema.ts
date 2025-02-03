@@ -1,14 +1,18 @@
 import { Hex } from 'viem';
-import { IsString, Matches } from '@nestjs/class-validator';
+import { ArrayMinSize, IsArray, Matches } from '@nestjs/class-validator';
 import { privateKeyRegex } from 'src/regex';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class EnvConfig {
-  @IsString()
+  @Transform(({ value }: { value: string }) => value.split(',') as Hex[])
+  @IsArray()
+  @ArrayMinSize(2)
+  @Type(() => String)
   @Matches(privateKeyRegex, {
-    message: 'ETH_PRIVATE_KEY must be a valid Ethereum private key',
+    message: 'ETH_PRIVATE_KEYS must be a valid Ethereum private key',
+    each: true,
   })
-  ETH_PRIVATE_KEY: Hex;
+  ETH_PRIVATE_KEYS: Hex[];
 
   @Type(() => Number)
   CHAIN_ID: number;
