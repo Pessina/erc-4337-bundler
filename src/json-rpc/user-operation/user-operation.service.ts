@@ -2,13 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { UserOperationDto } from './dto/user-operation.dto';
 import { JsonRpcError } from '../errors/json-rpc.error';
 import { JsonRpcErrorCode } from '../types';
-import { Hex, WriteContractErrorType } from 'viem';
+import { Hex } from 'viem';
 import { entryPointAbi } from './abis/entry-point.abi';
 import { AccountService } from '../../account/account.service';
+import { TransactionService } from 'src/transaction/transaction.service';
 
 @Injectable()
 export class UserOperationService {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly transactionService: TransactionService,
+  ) {}
 
   async sendUserOperation([userOp, entryPoint]: [
     UserOperationDto,
@@ -16,39 +20,26 @@ export class UserOperationService {
   ]): Promise<string> {
     const walletClient = await this.accountService.getWalletClient();
 
-    try {
-      if (!walletClient || !walletClient.account) {
-        throw new JsonRpcError(
-          JsonRpcErrorCode.INTERNAL_ERROR,
-          'Unable to get wallet client',
-        );
-      }
+    if (!walletClient || !walletClient.account) {
+      throw new JsonRpcError(
+        JsonRpcErrorCode.INTERNAL_ERROR,
+        'Unable to get wallet client',
+      );
+    }
 
-      // TODO: Include exponential back off retry
-      const hash = await walletClient.writeContract({
+    // TODO: Include exponential back off retry
+    const hash = await this.transactionService.writeContractWithRetry(
+      walletClient,
+      {
         chain: walletClient.chain,
         account: walletClient.account,
         address: entryPoint,
         abi: entryPointAbi,
         functionName: 'handleOps',
         args: [[userOp], walletClient.account.address],
-      });
+      },
+    );
 
-      return hash;
-    } catch (e) {
-      const error = e as WriteContractErrorType;
-      // The list is not exhaustive and should be extended
-      if (error.name === 'ContractFunctionExecutionError') {
-        throw new JsonRpcError(
-          JsonRpcErrorCode.INVALID_REQUEST,
-          error.cause.message || 'Contract execution failed',
-        );
-      }
-
-      throw new JsonRpcError(
-        JsonRpcErrorCode.INTERNAL_ERROR,
-        error.message || 'Unknown error occurred',
-      );
-    }
+    return hash;
   }
 }

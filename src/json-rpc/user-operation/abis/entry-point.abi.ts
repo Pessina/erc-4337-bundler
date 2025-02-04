@@ -1,5 +1,7 @@
+import { Abi } from 'viem';
+
 // Import from Sepolia Explorer contract ABI: https://sepolia.etherscan.io/address/0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789#code
-export const entryPointAbi = [
+export const entryPointAbi: Abi = [
   {
     inputs: [
       { internalType: 'uint256', name: 'preOpGas', type: 'uint256' },

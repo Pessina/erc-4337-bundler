@@ -10,6 +10,7 @@ import {
   PublicClient,
   WalletClient,
   Address,
+  Chain,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { JsonRpcError } from 'src/json-rpc/errors/json-rpc.error';
@@ -19,10 +20,12 @@ import { JsonRpcErrorCode } from 'src/json-rpc/types';
 export class AccountService implements OnModuleInit {
   private readonly accounts: PrivateKeyAccount[] = [];
   private readonly publicClient: PublicClient;
+  private readonly chain: Chain;
 
   constructor(private readonly configService: ConfigService<EnvConfig, true>) {
+    this.chain = getChain(this.configService.get('CHAIN_ID', { infer: true }));
     this.publicClient = createPublicClient({
-      chain: getChain(this.configService.get('CHAIN_ID', { infer: true })),
+      chain: this.chain,
       transport: http(),
     });
   }
@@ -44,11 +47,13 @@ export class AccountService implements OnModuleInit {
   async getWalletClient(): Promise<WalletClient> {
     const account = await this.selectOptimalAccount();
 
-    return createWalletClient({
+    const walletClient = createWalletClient({
       account,
-      chain: getChain(this.configService.get('CHAIN_ID')),
+      chain: this.chain,
       transport: http(),
     });
+
+    return walletClient;
   }
 
   // The current implementation relies on the node mempool, that can be out of sync.
