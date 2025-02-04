@@ -5,7 +5,7 @@ import { JsonRpcErrorCode } from '../types';
 import { Hex } from 'viem';
 import { entryPointAbi } from './abis/entry-point.abi';
 import { AccountService } from '../../account/account.service';
-import { TransactionService } from 'src/transaction/transaction.service';
+import { TransactionService } from '../../transaction/transaction.service';
 
 @Injectable()
 export class UserOperationService {
@@ -27,7 +27,6 @@ export class UserOperationService {
       );
     }
 
-    // TODO: Include exponential back off retry
     const hash = await this.transactionService.writeContractWithRetry(
       walletClient,
       {

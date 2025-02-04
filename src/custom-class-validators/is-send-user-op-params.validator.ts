@@ -1,8 +1,12 @@
-import { registerDecorator, ValidationOptions } from '@nestjs/class-validator';
+import {
+  registerDecorator,
+  validateSync,
+  ValidationOptions,
+} from '@nestjs/class-validator';
 import { UserOperationDto } from '../json-rpc/user-operation/dto/user-operation.dto';
 import { Hex } from 'viem';
-import { addressRegex } from 'src/regex';
-import { assertSchema } from 'src/utils';
+import { addressRegex } from '../regex';
+import { plainToInstance } from 'class-transformer';
 
 export function IsSendUserOpParams(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string) {
@@ -12,7 +16,7 @@ export function IsSendUserOpParams(validationOptions?: ValidationOptions) {
       options: validationOptions,
       constraints: [],
       validator: {
-        async validate(value: any) {
+        validate(value: any) {
           if (!Array.isArray(value) || value.length !== 2) {
             return false;
           }
@@ -20,7 +24,8 @@ export function IsSendUserOpParams(validationOptions?: ValidationOptions) {
           const [userOp, entryPoint] = value as [UserOperationDto, Hex];
 
           try {
-            await assertSchema(UserOperationDto, userOp);
+            const instance = plainToInstance(UserOperationDto, userOp);
+            validateSync(instance);
           } catch {
             return false;
           }

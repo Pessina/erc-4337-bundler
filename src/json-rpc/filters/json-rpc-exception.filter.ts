@@ -9,7 +9,7 @@ import { Response } from 'express';
 import { JsonRpcErrorCode, JsonRpcErrorResponse } from '../types';
 import { JsonRpcError } from '../errors/json-rpc.error';
 import { JsonRpcRequest } from '../dto/json-rpc.dto';
-import { JSON_RPC_VERSION } from 'src/constants';
+import { JSON_RPC_VERSION } from '../../constants';
 
 @Catch()
 export class JsonRpcExceptionFilter implements ExceptionFilter {

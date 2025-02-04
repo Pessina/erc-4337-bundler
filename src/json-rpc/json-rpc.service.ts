@@ -4,8 +4,8 @@ import { JsonRpcErrorCode, JsonRpcResponse } from './types';
 import { JsonRpcError } from './errors/json-rpc.error';
 import { UserOperationService } from './user-operation/user-operation.service';
 import { SendUserOperationParamsDto } from './user-operation/dto/user-operation.dto';
-import { JSON_RPC_VERSION } from 'src/constants';
-import { assertSchema } from 'src/utils';
+import { JSON_RPC_VERSION } from '../constants';
+import { assertSchema } from '../utils';
 
 @Injectable()
 export class JsonRpcService {

@@ -1,6 +1,6 @@
 import { Hex } from 'viem';
 import { ArrayMinSize, IsArray, Matches } from '@nestjs/class-validator';
-import { privateKeyRegex } from 'src/regex';
+import { privateKeyRegex } from '../regex';
 import { Transform, Type } from 'class-transformer';
 
 export class EnvConfig {

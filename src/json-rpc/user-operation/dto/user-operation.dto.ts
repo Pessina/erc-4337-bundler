@@ -1,6 +1,6 @@
 import { IsNotEmpty, Matches } from '@nestjs/class-validator';
-import { IsSendUserOpParams } from '../../../custom-class-validators';
-import { hexStringRegex } from 'src/regex';
+import { IsSendUserOpParams } from '../../../custom-class-validators/is-send-user-op-params.validator';
+import { hexStringRegex } from '../../../regex';
 import { Hex } from 'viem';
 
 // @IsHexadecimal() from class-validator is not working, I believe it's because of the starting 0x on the input
@@ -52,6 +52,9 @@ export class UserOperationDto {
 
 export class SendUserOperationParamsDto {
   @IsNotEmpty()
-  @IsSendUserOpParams()
+  @IsSendUserOpParams({
+    message:
+      'Invalid params, must be an array containing a valid UserOperation object and an EntryPoint address',
+  })
   params: [UserOperationDto, Hex];
 }

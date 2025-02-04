@@ -1,7 +1,7 @@
 import { validate } from '@nestjs/class-validator';
 import { JsonRpcRequest } from './json-rpc.dto';
 import { plainToInstance } from 'class-transformer';
-import { JSON_RPC_VERSION } from 'src/constants';
+import { JSON_RPC_VERSION } from '../../constants';
 
 describe('JsonRpcRequest DTO', () => {
   it('should validate a request with positional parameters', async () => {

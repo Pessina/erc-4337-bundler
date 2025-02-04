@@ -7,10 +7,8 @@ import {
 } from 'viem';
 import { JsonRpcError } from '../json-rpc/errors/json-rpc.error';
 import { JsonRpcErrorCode } from '../json-rpc/types';
-import pRetry from 'p-retry';
-import pTimeout from 'p-timeout';
 
-// TODO: Avoid using this and check if the RPC has standard error codes
+// TODO: Avoid using error message and check if the RPC has standard error codes
 export const JSON_RPC_RETRY_ERROR_MESSAGES = [
   'nonce too low',
   'insufficient gas',
@@ -60,32 +58,45 @@ export class TransactionService {
   }
 
   private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
-    return pRetry(
-      async () => {
-        return await pTimeout(operation(), {
-          milliseconds: this.TIMEOUT,
-          message: 'Transaction timed out',
+    let attempt = 0;
+
+    while (attempt <= this.MAX_RETRIES) {
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Transaction timed out'));
+          }, this.TIMEOUT);
         });
-      },
-      {
-        retries: this.MAX_RETRIES,
-        onFailedAttempt: (error) => {
+
+        const operationPromise = operation();
+        const result = await Promise.race([operationPromise, timeoutPromise]);
+        return result;
+      } catch (error: unknown) {
+        attempt++;
+
+        if (error instanceof Error) {
           // TODO: Consider using NestJs Logger
           console.log({
             error: error.message,
-            attemptNumber: error.attemptNumber,
-            retriesLeft: error.retriesLeft,
+            attemptNumber: attempt,
+            retriesLeft: this.MAX_RETRIES - attempt,
           });
-        },
-        shouldRetry: (error) => {
-          if (error instanceof Error && 'message' in error) {
-            return JSON_RPC_RETRY_ERROR_MESSAGES.some((message) =>
-              error.message.toLowerCase().includes(message),
-            );
-          }
-          return false;
-        },
-      },
-    );
+        }
+
+        const shouldRetry =
+          attempt < this.MAX_RETRIES &&
+          error instanceof Error &&
+          'message' in error &&
+          JSON_RPC_RETRY_ERROR_MESSAGES.some((message) =>
+            error.message.toLowerCase().includes(message),
+          );
+
+        if (!shouldRetry) {
+          throw error;
+        }
+      }
+    }
+
+    throw new Error('Max retries exceeded');
   }
 }

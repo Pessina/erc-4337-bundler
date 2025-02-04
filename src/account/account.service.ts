@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EnvConfig } from 'src/config/env.schema';
-import { getChain } from 'src/utils';
+import { EnvConfig } from '../config/env.schema';
+import { getChain } from '../utils';
 import {
   createWalletClient,
   createPublicClient,
@@ -13,8 +13,8 @@ import {
   Chain,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { JsonRpcError } from 'src/json-rpc/errors/json-rpc.error';
-import { JsonRpcErrorCode } from 'src/json-rpc/types';
+import { JsonRpcError } from '../json-rpc/errors/json-rpc.error';
+import { JsonRpcErrorCode } from '../json-rpc/types';
 
 @Injectable()
 export class AccountService implements OnModuleInit {

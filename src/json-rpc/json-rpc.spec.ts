@@ -3,7 +3,7 @@ import { JsonRpcController } from './json-rpc.controller';
 import { JsonRpcService } from './json-rpc.service';
 import { JsonRpcError } from './errors/json-rpc.error';
 import { JsonRpcErrorCode } from './types';
-import { JSON_RPC_VERSION } from 'src/constants';
+import { JSON_RPC_VERSION } from '../constants';
 
 describe('JsonRpcController', () => {
   let controller: JsonRpcController;
