@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseFilters } from '@nestjs/common';
+import { Controller, Post, Body, UseFilters, HttpCode } from '@nestjs/common';
 import { JsonRpcService } from './json-rpc.service';
 import { JsonRpcRequest } from './dto/json-rpc.dto';
 import { JsonRpcExceptionFilter } from './filters/json-rpc-exception.filter';
@@ -11,6 +11,7 @@ export class JsonRpcController {
   constructor(private readonly jsonRpcService: JsonRpcService) {}
 
   @Post()
+  @HttpCode(200)
   async handleRpcCall(
     @Body()
     request: JsonRpcRequest | JsonRpcRequest[],
