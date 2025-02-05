@@ -59,6 +59,7 @@ export class TransactionService {
 
   private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
     let attempt = 0;
+    const baseDelay = 1000;
 
     while (attempt <= this.MAX_RETRIES) {
       try {
@@ -94,6 +95,12 @@ export class TransactionService {
         if (!shouldRetry) {
           throw error;
         }
+
+        const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
+        const jitter = Math.random() * exponentialDelay * 0.1;
+        const delay = exponentialDelay + jitter;
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
