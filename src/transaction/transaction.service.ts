@@ -56,21 +56,35 @@ export class TransactionService {
       );
     }
   }
+  private clear = ({
+    timeoutId,
+  }: {
+    timeoutId: NodeJS.Timeout | undefined;
+  }) => {
+    if (timeoutId) clearTimeout(timeoutId);
+  };
 
   private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
     let attempt = 0;
     const baseDelay = 1000;
+    let timeoutId: NodeJS.Timeout | undefined;
 
     while (attempt <= this.MAX_RETRIES) {
       try {
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
+          this.clear({
+            timeoutId,
+          });
+          timeoutId = setTimeout(() => {
             reject(new Error('Transaction timed out'));
           }, this.TIMEOUT);
         });
 
         const operationPromise = operation();
         const result = await Promise.race([operationPromise, timeoutPromise]);
+        this.clear({
+          timeoutId,
+        });
         return result;
       } catch (error: unknown) {
         attempt++;
@@ -93,6 +107,9 @@ export class TransactionService {
           );
 
         if (!shouldRetry) {
+          this.clear({
+            timeoutId,
+          });
           throw error;
         }
 
@@ -103,6 +120,10 @@ export class TransactionService {
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
+
+    this.clear({
+      timeoutId,
+    });
 
     throw new Error('Max retries exceeded');
   }
