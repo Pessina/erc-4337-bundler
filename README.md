@@ -82,3 +82,11 @@ pnpm test:e2e
 ```
 
 The test suite includes a single test that uses the Biconomy SDK to create a Sepolia UserOp and submit it to the server.
+
+### Unit Testing
+
+Run the unit test suite:
+
+```bash
+pnpm test
+```
